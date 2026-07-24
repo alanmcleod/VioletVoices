@@ -1,0 +1,11 @@
+VIOLET VOICES AUDIO NOTICE
+
+The included acoustic-piano MP3 files were rendered from the TimGM6mb SoundFont.
+
+TimGM6mb SoundFont:
+Copyright © 2004 Tim Brechbill
+Copyright © 2010 David Bolton
+Licensed under the GNU General Public License version 2 (GPL-2.0).
+
+The rendered MP3 files in the piano folder are distributed under GPL-2.0.
+A copy of GPL version 2 is included as GPL-2.txt.

@@ -45,7 +45,7 @@
     .btn.danger{color:var(--danger)}
     .btn.icon{padding:9px 11px}
     .settings{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow);margin-bottom:14px}
-    .settings-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+    .settings-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
     label{font-size:.86rem;color:var(--muted);display:block}
     select,input[type="number"],input[type="text"]{width:100%;margin-top:5px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:10px}
     .playbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -79,6 +79,9 @@
     .footer-left,.footer-right{display:flex;gap:8px;flex-wrap:wrap}
     .hidden{display:none!important}
     .small{font-size:.82rem;color:var(--muted)}
+    .switch-wrap{display:flex;align-items:center;gap:9px;margin-top:9px;min-height:36px;color:var(--ink)}
+    .switch-wrap input{width:44px;height:24px;accent-color:var(--accent);margin:0}
+    .sample-credit{font-size:.78rem;color:var(--muted);margin-top:8px}
     @media(max-width:680px){
       .settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .editor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -136,6 +139,12 @@
       <label>Volume
         <input id="volumeInput" type="range" min="0" max="100" step="1" value="75">
       </label>
+      <label>Durations
+        <select id="durationDisplaySelect">
+          <option value="names">Note names</option>
+          <option value="fractions">Values</option>
+        </select>
+      </label>
     </div>
     <div class="playbar">
       <button class="btn primary" id="playAllBtn" type="button">▶ Play all</button>
@@ -143,6 +152,7 @@
       <button class="btn" id="loopBtn" type="button">Loop: off</button>
     </div>
     <div class="status" id="status" aria-live="polite"></div>
+    <div class="sample-credit">Offline acoustic-piano samples included. See AUDIO-LICENCE.txt. Once installed, playback needs no internet connection.</div>
   </section>
 
   <main>
@@ -209,6 +219,7 @@
     Soprano:[60,81], Alto:[55,74], Tenor:[48,67], Bass:[40,60]
   };
   const DUR_NAMES = {"4":"Semibreve","3":"Dotted minim","2":"Minim","1.5":"Dotted crotchet","1":"Crotchet","0.5":"Quaver"};
+  const DUR_VALUES = {"4":"1","3":"3/4","2":"1/2","1.5":"3/8","1":"1/4","0.5":"1/8"};
   const LETTER_PC = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 
   const keySelect = document.getElementById("keySelect");
@@ -221,6 +232,9 @@
     masterGain: null,
     compressor: null,
     audioUnlocked: false,
+    pianoBuffers: new Map(),
+    sampleLoadPromise: null,
+    samplesUnavailable: false,
     activeNodes: [],
     playToken: 0,
     loop: false
@@ -240,13 +254,13 @@
   }
 
   function defaultPiece(){
-    return { key:"D", mode:"major", time:"4/4", tempo:84, volume:75, chords:[blankChord()] };
+    return { key:"D", mode:"major", time:"4/4", tempo:84, volume:75, durationDisplay:"names", chords:[blankChord()] };
   }
 
   function loadPiece(){
     try{
       const raw = localStorage.getItem("violetVoicesPiece");
-      if(raw) return JSON.parse(raw);
+      if(raw){ const piece=JSON.parse(raw); piece.durationDisplay ||= "names"; return piece; }
     }catch(e){}
     return defaultPiece();
   }
@@ -271,6 +285,28 @@
     const a = accidentalValue(note);
     const symbol = a === "#" ? "♯" : a === "b" ? "♭" : a === "n" ? "♮" : "";
     return `${note.letter}${symbol}${note.octave}`;
+  }
+
+
+  function tonicLetter(){
+    return state.piece.key.replace(/[♯♭]/g, "")[0];
+  }
+
+  function valueText(note){
+    const letters = ["C","D","E","F","G","A","B"];
+    const tonicIndex = letters.indexOf(tonicLetter());
+    const noteIndex = letters.indexOf(note.letter);
+    const degree = ((noteIndex - tonicIndex + 7) % 7) + 1;
+    const expected = ((LETTER_PC[note.letter] + ((KEY_SIGS[effectiveKeyName()] || {})[note.letter] === "#" ? 1 : (KEY_SIGS[effectiveKeyName()] || {})[note.letter] === "b" ? -1 : 0)) + 12) % 12;
+    const actual = ((midiOf(note) % 12) + 12) % 12;
+    let delta = (actual - expected + 12) % 12;
+    if(delta > 6) delta -= 12;
+    const prefix = delta === 1 ? "♯" : delta === -1 ? "♭" : delta === 2 ? "♯♯" : delta === -2 ? "♭♭" : "";
+    return `${prefix}${degree}/${note.octave}`;
+  }
+
+  function displayNote(note){
+    return noteText(note);
   }
 
   function midiOf(note){
@@ -326,6 +362,13 @@
     return "Unlabelled chord";
   }
 
+  function durationLabel(beats){
+    const key = String(beats);
+    return state.piece.durationDisplay === "fractions"
+      ? (DUR_VALUES[key] || key)
+      : (DUR_NAMES[key] || key + " beats");
+  }
+
   function durationSeconds(beats){
     return Number(beats) * (60/Number(state.piece.tempo || 84));
   }
@@ -336,6 +379,7 @@
     document.getElementById("timeSelect").value = state.piece.time;
     document.getElementById("tempoInput").value = state.piece.tempo;
     document.getElementById("volumeInput").value = state.piece.volume ?? 75;
+    document.getElementById("durationDisplaySelect").value = state.piece.durationDisplay || "names";
     document.getElementById("loopBtn").textContent = `Loop: ${state.loop ? "on" : "off"}`;
 
     const list = document.getElementById("chordList");
@@ -349,14 +393,14 @@
       card.className = "chord-card";
       card.dataset.index = idx;
       const voices = chord.notes.map((n,i)=>`
-        <div class="voice"><strong>${["S","A","T","B"][i]}</strong><span>${noteText(n)}</span></div>
+        <div class="voice"><strong>${["S","A","T","B"][i]}</strong><span>${displayNote(n)}</span></div>
       `).join("");
       const badges = chordAnalysis(chord,idx).map(b=>`<span class="badge ${b.warn?"warn":""}">${b.text}</span>`).join("");
       card.innerHTML = `
         <div class="card-top">
           <div>
             <div class="card-title">Chord ${idx+1}</div>
-            <div class="card-meta">${DUR_NAMES[String(chord.duration)] || chord.duration+" beats"}</div>
+            <div class="card-meta">${durationLabel(chord.duration)}</div>
           </div>
           <button class="btn icon play-one" type="button" aria-label="Play chord ${idx+1}">▶</button>
         </div>
@@ -481,52 +525,102 @@
     setStatus("Stopped.");
   }
 
-  function makeTone(freq, start, duration, level, detune=0){
-    const ctx = state.audioCtx;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
+  const SAMPLE_ROOTS = [
+    [36,"C2.mp3"],
+    [39,"Ds2.mp3"],
+    [42,"Fs2.mp3"],
+    [45,"A2.mp3"],
+    [48,"C3.mp3"],
+    [51,"Ds3.mp3"],
+    [54,"Fs3.mp3"],
+    [57,"A3.mp3"],
+    [60,"C4.mp3"],
+    [63,"Ds4.mp3"],
+    [66,"Fs4.mp3"],
+    [69,"A4.mp3"],
+    [72,"C5.mp3"],
+    [75,"Ds5.mp3"],
+    [78,"Fs5.mp3"],
+    [81,"A5.mp3"],
+    [84,"C6.mp3"]
+  ];
+  const SAMPLE_BASE = "./piano/";
 
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(freq, start);
-    osc.detune.setValueAtTime(detune, start);
-    filter.type = "lowpass";
-    filter.frequency.setValueAtTime(2400, start);
-    filter.Q.setValueAtTime(0.7, start);
+  function nearestSample(midi){
+    return SAMPLE_ROOTS.reduce((best,item)=>Math.abs(item[0]-midi)<Math.abs(best[0]-midi)?item:best,SAMPLE_ROOTS[0]);
+  }
 
-    const attack = 0.018;
-    const decay = Math.min(0.28, duration * 0.22);
-    const releaseStart = Math.max(start + attack + decay, start + duration * 0.72);
-    const end = start + duration;
+  async function loadSample(rootMidi, filename){
+    if(state.pianoBuffers.has(rootMidi)) return state.pianoBuffers.get(rootMidi);
+    const url = SAMPLE_BASE + filename;
+    const response = await fetch(url, {mode:"cors"});
+    if(!response.ok) throw new Error(`Local piano sample ${response.status}`);
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = await state.audioCtx.decodeAudioData(arrayBuffer.slice(0));
+    state.pianoBuffers.set(rootMidi, buffer);
+    return buffer;
+  }
 
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(level, start + attack);
-    gain.gain.exponentialRampToValueAtTime(level * 0.48, start + attack + decay);
-    gain.gain.setValueAtTime(level * 0.48, releaseStart);
-    gain.gain.exponentialRampToValueAtTime(0.0001, end);
+  async function preloadNeededSamples(chord){
+    const needed = new Map(chord.notes.map(n=>nearestSample(midiOf(n))).map(x=>[x[0],x[1]]));
+    await Promise.all([...needed].map(([m,f])=>loadSample(m,f)));
+  }
 
-    osc.connect(filter).connect(gain).connect(state.masterGain);
-    osc.start(start);
-    osc.stop(end + 0.04);
+  function playSampledNote(note,start,duration,level){
+    const midi=midiOf(note);
+    const [rootMidi]=nearestSample(midi);
+    const buffer=state.pianoBuffers.get(rootMidi);
+    if(!buffer) throw new Error("Sample not loaded");
+    const source=state.audioCtx.createBufferSource();
+    const gain=state.audioCtx.createGain();
+    source.buffer=buffer;
+    source.playbackRate.setValueAtTime(Math.pow(2,(midi-rootMidi)/12),start);
+    const end=start+Math.max(.22,duration);
+    gain.gain.setValueAtTime(0.0001,start);
+    gain.gain.exponentialRampToValueAtTime(level,start+.012);
+    gain.gain.setValueAtTime(level,Math.min(start+.12,end-.08));
+    gain.gain.exponentialRampToValueAtTime(0.0001,end);
+    source.connect(gain).connect(state.masterGain);
+    source.start(start);
+    source.stop(end+.08);
+    state.activeNodes.push(source);
+  }
+
+  function makeFallbackTone(freq,start,duration,level){
+    const osc=state.audioCtx.createOscillator();
+    const gain=state.audioCtx.createGain();
+    osc.type="triangle";
+    osc.frequency.setValueAtTime(freq,start);
+    gain.gain.setValueAtTime(.0001,start);
+    gain.gain.exponentialRampToValueAtTime(level,start+.015);
+    gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
+    osc.connect(gain).connect(state.masterGain);
+    osc.start(start); osc.stop(start+duration+.04);
     state.activeNodes.push(osc);
   }
 
   async function playChord(chord, seconds=1.2){
-    const ready = await ensureAudio();
+    const ready=await ensureAudio();
     if(!ready) return false;
-
-    const ctx = state.audioCtx;
-    const now = ctx.currentTime + 0.025;
-    const duration = Math.max(0.2, seconds);
-
+    const duration=Math.max(.22,seconds);
+    let sampled=!state.samplesUnavailable;
+    if(sampled){
+      try{
+        setStatus("Preparing piano…");
+        await preloadNeededSamples(chord);
+      }catch(err){
+        state.samplesUnavailable=true;
+        sampled=false;
+        console.warn("Local piano unavailable; using fallback.",err);
+      }
+    }
+    const now=state.audioCtx.currentTime+.03;
     chord.notes.forEach((note,i)=>{
-      const freq = freqOf(note);
-      const level = i === 3 ? 0.18 : (i === 0 ? 0.16 : 0.145);
-      makeTone(freq, now + i*0.006, duration, level, 0);
-      makeTone(freq * 2, now + i*0.006, duration * 0.72, level * 0.16, i % 2 ? 2 : -2);
+      const level=i===3?.28:(i===0?.23:.21);
+      if(sampled) playSampledNote(note,now+i*.008,duration,level);
+      else makeFallbackTone(freqOf(note),now+i*.008,duration,level*.75);
     });
-
-    setStatus("Playing " + chord.notes.map(noteText).join(" · "));
+    setStatus(`${sampled ? "Piano" : "Fallback sound"}: ` + chord.notes.map(displayNote).join(" · "));
     return true;
   }
 
@@ -583,13 +677,14 @@
     } else if(e.target.closest(".insert-btn")) openEditor(null,idx+1);
   });
 
-  ["keySelect","modeSelect","timeSelect","tempoInput","volumeInput"].forEach(id=>{
+  ["keySelect","modeSelect","timeSelect","tempoInput","volumeInput","durationDisplaySelect"].forEach(id=>{
     document.getElementById(id).addEventListener("change",()=>{
       state.piece.key = keySelect.value;
       state.piece.mode = document.getElementById("modeSelect").value;
       state.piece.time = document.getElementById("timeSelect").value;
       state.piece.tempo = Number(document.getElementById("tempoInput").value) || 84;
       state.piece.volume = Number(document.getElementById("volumeInput").value) || 0;
+      state.piece.durationDisplay = document.getElementById("durationDisplaySelect").value;
       if(state.masterGain && state.audioCtx){
         state.masterGain.gain.setTargetAtTime(Math.max(0.001, state.piece.volume/100), state.audioCtx.currentTime, 0.01);
       }

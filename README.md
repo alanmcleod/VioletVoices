@@ -1,11 +1,22 @@
-# Violet Voices 1.2
+# Violet Voices 1.5
 
-Playback has been revised for iPhone Safari.
+This is the self-contained offline-piano edition.
 
-- Explicit audio unlock and resume
-- Louder, clearer tones
-- Volume slider
-- Visible playback/error status
-- Refreshed offline cache
+## Changes
 
-Replace all existing GitHub files with this version. After GitHub Pages updates, refresh Safari and tap a chord Play button. Raise both the app volume and iPhone media volume if needed.
+- Includes 17 local acoustic-piano MP3 samples.
+- No external audio host is required.
+- Samples load only when nearby notes are played.
+- Pitch and chord names always remain note names.
+- The Durations setting switches between note names and values.
+- The synthesised tone remains as an emergency fallback.
+
+## Uploading
+
+Replace the existing GitHub repository contents with everything in this folder,
+including the piano and icons folders.
+
+After GitHub Pages updates, close and reopen the installed app. If Safari keeps
+the old version, remove the home-screen app once and add it again from Safari.
+
+See AUDIO-LICENCE.txt and GPL-2.txt for the included audio licensing.
