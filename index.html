@@ -7,8 +7,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Violet Voices</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png">
   <style>
     :root{
       --bg:#f6f1fb;
@@ -43,7 +45,7 @@
     .btn.danger{color:var(--danger)}
     .btn.icon{padding:9px 11px}
     .settings{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow);margin-bottom:14px}
-    .settings-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+    .settings-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
     label{font-size:.86rem;color:var(--muted);display:block}
     select,input[type="number"],input[type="text"]{width:100%;margin-top:5px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:10px}
     .playbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -131,6 +133,9 @@
       <label>Tempo
         <input id="tempoInput" type="number" min="30" max="220" step="1" value="84">
       </label>
+      <label>Volume
+        <input id="volumeInput" type="range" min="0" max="100" step="1" value="75">
+      </label>
     </div>
     <div class="playbar">
       <button class="btn primary" id="playAllBtn" type="button">▶ Play all</button>
@@ -213,6 +218,9 @@
     piece: loadPiece(),
     editingIndex: null,
     audioCtx: null,
+    masterGain: null,
+    compressor: null,
+    audioUnlocked: false,
     activeNodes: [],
     playToken: 0,
     loop: false
@@ -232,7 +240,7 @@
   }
 
   function defaultPiece(){
-    return { key:"D", mode:"major", time:"4/4", tempo:84, chords:[blankChord()] };
+    return { key:"D", mode:"major", time:"4/4", tempo:84, volume:75, chords:[blankChord()] };
   }
 
   function loadPiece(){
@@ -327,6 +335,7 @@
     document.getElementById("modeSelect").value = state.piece.mode;
     document.getElementById("timeSelect").value = state.piece.time;
     document.getElementById("tempoInput").value = state.piece.tempo;
+    document.getElementById("volumeInput").value = state.piece.volume ?? 75;
     document.getElementById("loopBtn").textContent = `Loop: ${state.loop ? "on" : "off"}`;
 
     const list = document.getElementById("chordList");
@@ -422,38 +431,103 @@
   }
 
   async function ensureAudio(){
-    if(!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if(state.audioCtx.state === "suspended") await state.audioCtx.resume();
+    try{
+      if(!state.audioCtx){
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if(!AudioCtx) throw new Error("This browser does not support Web Audio.");
+        state.audioCtx = new AudioCtx();
+        state.masterGain = state.audioCtx.createGain();
+        state.compressor = state.audioCtx.createDynamicsCompressor();
+        state.compressor.threshold.value = -24;
+        state.compressor.knee.value = 18;
+        state.compressor.ratio.value = 4;
+        state.compressor.attack.value = 0.003;
+        state.compressor.release.value = 0.25;
+        state.masterGain.connect(state.compressor).connect(state.audioCtx.destination);
+      }
+
+      const volume = Number(document.getElementById("volumeInput")?.value ?? 75) / 100;
+      state.masterGain.gain.setTargetAtTime(Math.max(0.001, volume), state.audioCtx.currentTime, 0.01);
+
+      if(state.audioCtx.state !== "running") await state.audioCtx.resume();
+
+      if(!state.audioUnlocked){
+        const buffer = state.audioCtx.createBuffer(1, 1, state.audioCtx.sampleRate);
+        const source = state.audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(state.masterGain);
+        source.start(0);
+        state.audioUnlocked = true;
+      }
+
+      if(state.audioCtx.state !== "running"){
+        throw new Error("Audio is still suspended. Tap Play again and raise the phone volume.");
+      }
+      return true;
+    }catch(err){
+      setStatus("Audio could not start: " + (err.message || err));
+      return false;
+    }
   }
 
   function stopAudio(){
     state.playToken++;
-    state.activeNodes.forEach(n=>{try{n.stop()}catch(e){}});
+    state.activeNodes.forEach(n=>{
+      try{ n.stop(0); }catch(e){}
+      try{ n.disconnect(); }catch(e){}
+    });
     state.activeNodes = [];
     document.querySelectorAll(".chord-card").forEach(c=>c.classList.remove("playing"));
     setStatus("Stopped.");
   }
 
-  async function playChord(chord, seconds=1.2){
-    await ensureAudio();
+  function makeTone(freq, start, duration, level, detune=0){
     const ctx = state.audioCtx;
-    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(freq, start);
+    osc.detune.setValueAtTime(detune, start);
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(2400, start);
+    filter.Q.setValueAtTime(0.7, start);
+
+    const attack = 0.018;
+    const decay = Math.min(0.28, duration * 0.22);
+    const releaseStart = Math.max(start + attack + decay, start + duration * 0.72);
+    const end = start + duration;
+
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(level, start + attack);
+    gain.gain.exponentialRampToValueAtTime(level * 0.48, start + attack + decay);
+    gain.gain.setValueAtTime(level * 0.48, releaseStart);
+    gain.gain.exponentialRampToValueAtTime(0.0001, end);
+
+    osc.connect(filter).connect(gain).connect(state.masterGain);
+    osc.start(start);
+    osc.stop(end + 0.04);
+    state.activeNodes.push(osc);
+  }
+
+  async function playChord(chord, seconds=1.2){
+    const ready = await ensureAudio();
+    if(!ready) return false;
+
+    const ctx = state.audioCtx;
+    const now = ctx.currentTime + 0.025;
+    const duration = Math.max(0.2, seconds);
+
     chord.notes.forEach((note,i)=>{
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
-      osc.type = i===3 ? "triangle" : "sine";
-      osc.frequency.value = freqOf(note);
-      filter.type = "lowpass";
-      filter.frequency.value = 1800;
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(i===0?0.12:0.095, now+0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now+seconds);
-      osc.connect(filter).connect(gain).connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now+seconds+0.04);
-      state.activeNodes.push(osc);
+      const freq = freqOf(note);
+      const level = i === 3 ? 0.18 : (i === 0 ? 0.16 : 0.145);
+      makeTone(freq, now + i*0.006, duration, level, 0);
+      makeTone(freq * 2, now + i*0.006, duration * 0.72, level * 0.16, i % 2 ? 2 : -2);
     });
+
+    setStatus("Playing " + chord.notes.map(noteText).join(" · "));
+    return true;
   }
 
   async function playSequence(start=0){
@@ -509,14 +583,26 @@
     } else if(e.target.closest(".insert-btn")) openEditor(null,idx+1);
   });
 
-  ["keySelect","modeSelect","timeSelect","tempoInput"].forEach(id=>{
+  ["keySelect","modeSelect","timeSelect","tempoInput","volumeInput"].forEach(id=>{
     document.getElementById(id).addEventListener("change",()=>{
       state.piece.key = keySelect.value;
       state.piece.mode = document.getElementById("modeSelect").value;
       state.piece.time = document.getElementById("timeSelect").value;
       state.piece.tempo = Number(document.getElementById("tempoInput").value) || 84;
+      state.piece.volume = Number(document.getElementById("volumeInput").value) || 0;
+      if(state.masterGain && state.audioCtx){
+        state.masterGain.gain.setTargetAtTime(Math.max(0.001, state.piece.volume/100), state.audioCtx.currentTime, 0.01);
+      }
       savePiece(); render();
     });
+  });
+
+  document.getElementById("volumeInput").addEventListener("input",()=>{
+    state.piece.volume = Number(document.getElementById("volumeInput").value);
+    if(state.masterGain && state.audioCtx){
+      state.masterGain.gain.setTargetAtTime(Math.max(0.001, state.piece.volume/100), state.audioCtx.currentTime, 0.01);
+    }
+    savePiece();
   });
 
   document.getElementById("playAllBtn").addEventListener("click",()=>playSequence(0));
