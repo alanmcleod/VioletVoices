@@ -1,4 +1,4 @@
-# Violet Voices 1.6
+# Violet Voices 1.7
 
 This is the self-contained offline-piano edition.
 
@@ -8,7 +8,7 @@ This is the self-contained offline-piano edition.
 - No external audio host is required.
 - Samples load only when nearby notes are played.
 - Pitch and chord names always remain note names.
-- The Durations setting switches between note names and values.
+- A visible full-width Duration names selector switches between UK and US terminology.
 - The synthesised tone remains as an emergency fallback.
 
 ## Uploading
@@ -22,12 +22,12 @@ the old version, remove the home-screen app once and add it again from Safari.
 See AUDIO-LICENCE.txt and GPL-2.txt for the included audio licensing.
 
 
-## Version 1.6 correction
+## Duration naming
 
-The Duration display selector is now visible in the main settings panel.
-It changes both the duration shown on chord cards and the choices in the chord editor:
+The main settings panel now has a full-width selector:
 
-- Names: Quaver, Crotchet, Minim, etc.
-- Values: 1/8, 1/4, 1/2, etc.
+- UK: quaver, crotchet, minim, dotted minim, semibreve
+- US: eighth note, quarter note, half note, dotted half note, whole note
 
-Pitch and chord names do not change.
+This changes duration wording on chord cards and in the chord editor. It does not
+change pitch names or detected chord names.
