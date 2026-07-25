@@ -139,6 +139,12 @@
       <label>Volume
         <input id="volumeInput" type="range" min="0" max="100" step="1" value="75">
       </label>
+      <label>Duration display
+        <select id="durationDisplaySelect">
+          <option value="names">Names</option>
+          <option value="values">Values</option>
+        </select>
+      </label>
       <label>Durations
         <select id="durationDisplaySelect">
           <option value="names">Note names</option>
@@ -219,6 +225,7 @@
     Soprano:[60,81], Alto:[55,74], Tenor:[48,67], Bass:[40,60]
   };
   const DUR_NAMES = {"4":"Semibreve","3":"Dotted minim","2":"Minim","1.5":"Dotted crotchet","1":"Crotchet","0.5":"Quaver"};
+  const DUR_VALUES = {"4":"1","3":"3/4","2":"1/2","1.5":"3/8","1":"1/4","0.5":"1/8"};
   const DUR_VALUES = {"4":"1","3":"3/4","2":"1/2","1.5":"3/8","1":"1/4","0.5":"1/8"};
   const LETTER_PC = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 
@@ -369,6 +376,22 @@
       : (DUR_NAMES[key] || key + " beats");
   }
 
+  function durationLabel(beats){
+    const key = String(beats);
+    return state.piece.durationDisplay === "values"
+      ? (DUR_VALUES[key] || key)
+      : (DUR_NAMES[key] || key + " beats");
+  }
+
+  function updateDurationEditorLabels(){
+    const select = document.getElementById("durationSelect");
+    [...select.options].forEach(option => {
+      option.textContent = state.piece.durationDisplay === "values"
+        ? DUR_VALUES[option.value]
+        : DUR_NAMES[option.value];
+    });
+  }
+
   function durationSeconds(beats){
     return Number(beats) * (60/Number(state.piece.tempo || 84));
   }
@@ -379,6 +402,8 @@
     document.getElementById("timeSelect").value = state.piece.time;
     document.getElementById("tempoInput").value = state.piece.tempo;
     document.getElementById("volumeInput").value = state.piece.volume ?? 75;
+    document.getElementById("durationDisplaySelect").value = state.piece.durationDisplay || "names";
+    updateDurationEditorLabels();
     document.getElementById("durationDisplaySelect").value = state.piece.durationDisplay || "names";
     document.getElementById("loopBtn").textContent = `Loop: ${state.loop ? "on" : "off"}`;
 
@@ -684,6 +709,7 @@
       state.piece.time = document.getElementById("timeSelect").value;
       state.piece.tempo = Number(document.getElementById("tempoInput").value) || 84;
       state.piece.volume = Number(document.getElementById("volumeInput").value) || 0;
+      state.piece.durationDisplay = document.getElementById("durationDisplaySelect").value;
       state.piece.durationDisplay = document.getElementById("durationDisplaySelect").value;
       if(state.masterGain && state.audioCtx){
         state.masterGain.gain.setTargetAtTime(Math.max(0.001, state.piece.volume/100), state.audioCtx.currentTime, 0.01);

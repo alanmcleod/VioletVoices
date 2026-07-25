@@ -1,4 +1,4 @@
-# Violet Voices 1.5
+# Violet Voices 1.6
 
 This is the self-contained offline-piano edition.
 
@@ -20,3 +20,14 @@ After GitHub Pages updates, close and reopen the installed app. If Safari keeps
 the old version, remove the home-screen app once and add it again from Safari.
 
 See AUDIO-LICENCE.txt and GPL-2.txt for the included audio licensing.
+
+
+## Version 1.6 correction
+
+The Duration display selector is now visible in the main settings panel.
+It changes both the duration shown on chord cards and the choices in the chord editor:
+
+- Names: Quaver, Crotchet, Minim, etc.
+- Values: 1/8, 1/4, 1/2, etc.
+
+Pitch and chord names do not change.
