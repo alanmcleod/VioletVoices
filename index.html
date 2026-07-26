@@ -94,7 +94,28 @@
       .settings-grid{grid-template-columns:1fr 1fr}
       .btn{padding:9px 11px}
     }
-  </style>
+  
+  .mode-switcher{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 18px}
+  .mode-button{border:1px solid var(--line);border-radius:16px;padding:12px 10px;background:#fff;color:var(--muted);font:inherit;font-weight:700;cursor:pointer}
+  .mode-button.active{background:var(--purple);border-color:var(--purple);color:#fff}
+  .mode-panel[hidden]{display:none!important}
+  .practice-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:16px}
+  .practice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .practice-grid .full{grid-column:1/-1}
+  .practice-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+  .practice-stat{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:12px}
+  .practice-stat strong{display:block;font-size:1.4rem;color:var(--purple);margin-top:4px}
+  .practice-entry{border-top:1px solid var(--line);padding:13px 0;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+  .practice-entry:first-child{border-top:0}
+  .practice-entry h3{margin:0 0 4px;font-size:1rem}
+  .practice-meta,.practice-note{color:var(--muted);font-size:.9rem}
+  .practice-note{margin-top:5px;white-space:pre-wrap}
+  .practice-empty{color:var(--muted);padding:8px 0}
+  .practice-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .danger-small{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 10px;color:var(--muted);font:inherit}
+  @media(max-width:560px){.practice-grid,.practice-summary{grid-template-columns:1fr}.practice-grid .full{grid-column:auto}}
+
+</style>
 </head>
 <body>
 <div class="app">
@@ -115,6 +136,14 @@
       </label>
     </div>
   </header>
+
+  <nav class="mode-switcher" aria-label="Violet Voices mode">
+    <button id="chordModeButton" class="mode-button active" type="button" aria-pressed="true">Chord mode on</button>
+    <button id="practiceModeButton" class="mode-button" type="button" aria-pressed="false">Practice mode off</button>
+  </nav>
+<section id="chordPanel" class="mode-panel">
+
+
 
   <section class="settings" aria-label="Piece settings">
     <div class="settings-grid">
@@ -197,6 +226,60 @@
     </div>
   </div>
 </dialog>
+
+
+</section>
+
+  <section id="practicePanel" class="mode-panel" hidden>
+    <div class="practice-summary" aria-live="polite">
+      <div class="practice-stat">Today<strong id="practiceToday">0 min</strong></div>
+      <div class="practice-stat">This week<strong id="practiceWeek">0 min</strong></div>
+      <div class="practice-stat">All time<strong id="practiceAll">0 min</strong></div>
+    </div>
+
+    <section class="practice-card" aria-labelledby="logPracticeHeading">
+      <h2 id="logPracticeHeading">Log music activity</h2>
+      <div class="practice-grid">
+        <label>Activity
+          <select id="practiceActivity">
+            <option>Singing practice</option>
+            <option>Instrument practice</option>
+            <option>Harmony or arranging</option>
+            <option>Music theory</option>
+            <option>Rehearsal</option>
+            <option>Lesson</option>
+            <option>Listening or score study</option>
+            <option>Other music activity</option>
+          </select>
+        </label>
+        <label>Instrument or voice
+          <input id="practiceInstrument" type="text" placeholder="e.g. singing, glockenspiel">
+        </label>
+        <label>Date
+          <input id="practiceDate" type="date">
+        </label>
+        <label>Minutes
+          <input id="practiceMinutes" type="number" min="1" step="1" inputmode="numeric" placeholder="20">
+        </label>
+        <label class="full">Notes
+          <textarea id="practiceNotes" rows="3" placeholder="What did you work on?"></textarea>
+        </label>
+      </div>
+      <div class="practice-actions">
+        <button id="addPracticeButton" class="primary" type="button">Add to practice log</button>
+      </div>
+      <div id="practiceMessage" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="practice-card" aria-labelledby="recentPracticeHeading">
+      <h2 id="recentPracticeHeading">Recent music activity</h2>
+      <div id="practiceEntries"></div>
+      <div class="practice-actions">
+        <button id="exportPracticeButton" type="button">Export practice log</button>
+        <button id="clearPracticeButton" type="button">Clear practice log</button>
+      </div>
+    </section>
+  </section>
 
 <script>
 (() => {
@@ -738,6 +821,173 @@
   }
   render();
 })();
+
+  const PRACTICE_STORAGE_KEY = "violetVoicesPracticeLog";
+  const MODE_STORAGE_KEY = "violetVoicesMode";
+
+  function localDateString(date = new Date()){
+    const offset = date.getTimezoneOffset();
+    return new Date(date.getTime() - offset * 60000).toISOString().slice(0,10);
+  }
+
+  function loadPracticeLog(){
+    try{
+      const raw = localStorage.getItem(PRACTICE_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(error){
+      console.warn("Could not read practice log", error);
+      return [];
+    }
+  }
+
+  let practiceLog = loadPracticeLog();
+
+  function savePracticeLog(){
+    localStorage.setItem(PRACTICE_STORAGE_KEY, JSON.stringify(practiceLog));
+  }
+
+  function setMode(mode){
+    const practice = mode === "practice";
+    document.getElementById("chordPanel").hidden = practice;
+    document.getElementById("practicePanel").hidden = !practice;
+
+    const chordButton = document.getElementById("chordModeButton");
+    const practiceButton = document.getElementById("practiceModeButton");
+
+    chordButton.classList.toggle("active", !practice);
+    practiceButton.classList.toggle("active", practice);
+    chordButton.textContent = practice ? "Chord mode off" : "Chord mode on";
+    practiceButton.textContent = practice ? "Practice mode on" : "Practice mode off";
+    chordButton.setAttribute("aria-pressed", String(!practice));
+    practiceButton.setAttribute("aria-pressed", String(practice));
+    localStorage.setItem(MODE_STORAGE_KEY, mode);
+  }
+
+  function startOfWeek(date){
+    const copy = new Date(date);
+    const day = copy.getDay();
+    copy.setDate(copy.getDate() + (day === 0 ? -6 : 1 - day));
+    copy.setHours(0,0,0,0);
+    return copy;
+  }
+
+  function totalMinutes(entries){
+    return entries.reduce((sum, entry) => sum + Number(entry.minutes || 0), 0);
+  }
+
+  function formatMinutes(minutes){
+    const value = Number(minutes || 0);
+    if(value < 60) return `${value} min`;
+    const hours = Math.floor(value / 60);
+    const mins = value % 60;
+    return mins ? `${hours} hr ${mins} min` : `${hours} hr`;
+  }
+
+  function escapePracticeText(value){
+    return String(value ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;");
+  }
+
+  function renderPracticeLog(){
+    const today = localDateString();
+    const weekStart = localDateString(startOfWeek(new Date()));
+
+    document.getElementById("practiceToday").textContent =
+      formatMinutes(totalMinutes(practiceLog.filter(entry => entry.date === today)));
+    document.getElementById("practiceWeek").textContent =
+      formatMinutes(totalMinutes(practiceLog.filter(entry => entry.date >= weekStart && entry.date <= today)));
+    document.getElementById("practiceAll").textContent = formatMinutes(totalMinutes(practiceLog));
+
+    const container = document.getElementById("practiceEntries");
+    if(!practiceLog.length){
+      container.innerHTML = '<div class="practice-empty">No activities logged yet.</div>';
+      return;
+    }
+
+    const sorted = [...practiceLog].sort((a,b) =>
+      b.date.localeCompare(a.date) || Number(b.createdAt || 0) - Number(a.createdAt || 0)
+    );
+
+    container.innerHTML = sorted.map(entry => `
+      <article class="practice-entry">
+        <div>
+          <h3>${escapePracticeText(entry.activity)}</h3>
+          <div class="practice-meta">
+            ${escapePracticeText(entry.date)} · ${formatMinutes(entry.minutes)}
+            ${entry.instrument ? ` · ${escapePracticeText(entry.instrument)}` : ""}
+          </div>
+          ${entry.notes ? `<div class="practice-note">${escapePracticeText(entry.notes)}</div>` : ""}
+        </div>
+        <button class="danger-small delete-practice" type="button" data-id="${entry.id}">Delete</button>
+      </article>
+    `).join("");
+
+    container.querySelectorAll(".delete-practice").forEach(button => {
+      button.addEventListener("click", () => {
+        practiceLog = practiceLog.filter(entry => entry.id !== button.dataset.id);
+        savePracticeLog();
+        renderPracticeLog();
+      });
+    });
+  }
+
+  document.getElementById("chordModeButton").addEventListener("click", () => setMode("chord"));
+  document.getElementById("practiceModeButton").addEventListener("click", () => setMode("practice"));
+  document.getElementById("practiceDate").value = localDateString();
+
+  document.getElementById("addPracticeButton").addEventListener("click", () => {
+    const activity = document.getElementById("practiceActivity").value;
+    const instrument = document.getElementById("practiceInstrument").value.trim();
+    const date = document.getElementById("practiceDate").value;
+    const minutes = Number(document.getElementById("practiceMinutes").value);
+    const notes = document.getElementById("practiceNotes").value.trim();
+    const message = document.getElementById("practiceMessage");
+
+    if(!date || !Number.isFinite(minutes) || minutes <= 0){
+      message.textContent = "Please enter a date and a practice time greater than zero.";
+      return;
+    }
+
+    practiceLog.push({
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      activity,
+      instrument,
+      date,
+      minutes: Math.round(minutes),
+      notes,
+      createdAt: Date.now()
+    });
+    savePracticeLog();
+    renderPracticeLog();
+
+    document.getElementById("practiceMinutes").value = "";
+    document.getElementById("practiceNotes").value = "";
+    message.textContent = `Added ${formatMinutes(Math.round(minutes))} to your practice log.`;
+  });
+
+  document.getElementById("exportPracticeButton").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(practiceLog, null, 2)], {type:"application/json"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `violet-voices-practice-${localDateString()}.json`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
+
+  document.getElementById("clearPracticeButton").addEventListener("click", () => {
+    if(practiceLog.length && confirm("Clear the entire practice log?")){
+      practiceLog = [];
+      savePracticeLog();
+      renderPracticeLog();
+    }
+  });
+
+  renderPracticeLog();
+  setMode(localStorage.getItem(MODE_STORAGE_KEY) === "practice" ? "practice" : "chord");
+
 </script>
 </body>
 </html>

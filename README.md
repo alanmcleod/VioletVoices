@@ -1,4 +1,4 @@
-# Violet Voices 1.7
+# Violet Voices 1.8
 
 This is the self-contained offline-piano edition.
 
@@ -31,3 +31,13 @@ The main settings panel now has a full-width selector:
 
 This changes duration wording on chord cards and in the chord editor. It does not
 change pitch names or detected chord names.
+
+
+## Practice log
+
+Use the two-button mode bar to switch between Chord mode and Practice mode.
+The active mode is purple and labelled on.
+
+Practice entries include activity, instrument or voice, date, minutes and optional notes.
+The app shows totals for today, this week and all time. Practice data is stored in
+the browser and can be exported as a JSON backup.

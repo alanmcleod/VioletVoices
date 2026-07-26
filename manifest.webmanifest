@@ -1,7 +1,7 @@
 {
   "name": "Violet Voices",
   "short_name": "Violet Voices",
-  "description": "A compact SATB harmony sketchbook with offline sampled-piano playback.",
+  "description": "SATB chord sketchbook and music practice tracker with offline piano playback.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
