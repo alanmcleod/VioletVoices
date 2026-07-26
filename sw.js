@@ -1,4 +1,4 @@
-const APP_CACHE = "violet-voices-app-v1-8";
+const APP_CACHE = "violet-voices-app-v1-9";
 const PIANO_CACHE = "violet-voices-piano-v1";
 const APP_FILES = [
   "./",

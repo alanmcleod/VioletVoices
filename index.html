@@ -97,7 +97,7 @@
   
   .mode-switcher{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 18px}
   .mode-button{border:1px solid var(--line);border-radius:16px;padding:12px 10px;background:#fff;color:var(--muted);font:inherit;font-weight:700;cursor:pointer}
-  .mode-button.active{background:var(--purple);border-color:var(--purple);color:#fff}
+  .mode-button.active{background:#5b2f91;border-color:#5b2f91;color:#fff}
   .mode-panel[hidden]{display:none!important}
   .practice-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:16px}
   .practice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -137,9 +137,9 @@
     </div>
   </header>
 
-  <nav class="mode-switcher" aria-label="Violet Voices mode">
+  <nav class="mode-switcher" aria-label="Violet Voices workspace">
     <button id="chordModeButton" class="mode-button active" type="button" aria-pressed="true">Chord mode on</button>
-    <button id="practiceModeButton" class="mode-button" type="button" aria-pressed="false">Practice mode off</button>
+    <button id="practiceModeButton" class="mode-button" type="button" aria-pressed="false">Practise log off</button>
   </nav>
 <section id="chordPanel" class="mode-panel">
 
@@ -857,7 +857,7 @@
     chordButton.classList.toggle("active", !practice);
     practiceButton.classList.toggle("active", practice);
     chordButton.textContent = practice ? "Chord mode off" : "Chord mode on";
-    practiceButton.textContent = practice ? "Practice mode on" : "Practice mode off";
+    practiceButton.textContent = practice ? "Practise log on" : "Practise log off";
     chordButton.setAttribute("aria-pressed", String(!practice));
     practiceButton.setAttribute("aria-pressed", String(practice));
     localStorage.setItem(MODE_STORAGE_KEY, mode);

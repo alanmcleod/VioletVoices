@@ -1,4 +1,4 @@
-# Violet Voices 1.8
+# Violet Voices 1.9
 
 This is the self-contained offline-piano edition.
 
@@ -35,9 +35,15 @@ change pitch names or detected chord names.
 
 ## Practice log
 
-Use the two-button mode bar to switch between Chord mode and Practice mode.
+Use the two-button mode bar to switch between Chord mode and Practise log.
 The active mode is purple and labelled on.
 
 Practice entries include activity, instrument or voice, date, minutes and optional notes.
 The app shows totals for today, this week and all time. Practice data is stored in
 the browser and can be exported as a JSON backup.
+
+
+## Version 1.9
+
+- The active workspace button now uses a dark purple background with white text.
+- “Practice mode” has been renamed “Practise log”.
