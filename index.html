@@ -138,8 +138,8 @@
   </header>
 
   <nav class="mode-switcher" aria-label="Violet Voices workspace">
-    <button id="chordModeButton" class="mode-button active" type="button" aria-pressed="true">Chord mode on</button>
-    <button id="practiceModeButton" class="mode-button" type="button" aria-pressed="false">Practise log off</button>
+    <button id="chordModeButton" class="mode-button active" type="button" aria-pressed="true">Chord mode</button>
+    <button id="practiceModeButton" class="mode-button" type="button" aria-pressed="false">Practise log</button>
   </nav>
 <section id="chordPanel" class="mode-panel">
 
@@ -856,8 +856,6 @@
 
     chordButton.classList.toggle("active", !practice);
     practiceButton.classList.toggle("active", practice);
-    chordButton.textContent = practice ? "Chord mode off" : "Chord mode on";
-    practiceButton.textContent = practice ? "Practise log on" : "Practise log off";
     chordButton.setAttribute("aria-pressed", String(!practice));
     practiceButton.setAttribute("aria-pressed", String(practice));
     localStorage.setItem(MODE_STORAGE_KEY, mode);

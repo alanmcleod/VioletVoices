@@ -1,4 +1,4 @@
-# Violet Voices 1.9
+# Violet Voices 1.10
 
 This is the self-contained offline-piano edition.
 
@@ -47,3 +47,9 @@ the browser and can be exported as a JSON backup.
 
 - The active workspace button now uses a dark purple background with white text.
 - “Practice mode” has been renamed “Practise log”.
+
+
+## Version 1.10
+
+The workspace buttons now use the fixed labels “Chord mode” and “Practise log”.
+The active workspace is indicated by the dark-purple button and displayed content.
