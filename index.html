@@ -115,6 +115,8 @@
   .danger-small{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 10px;color:var(--muted);font:inherit}
   @media(max-width:560px){.practice-grid,.practice-summary{grid-template-columns:1fr}.practice-grid .full{grid-column:auto}}
 
+
+  #chordHeaderActions[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -127,7 +129,7 @@
         <div class="subtitle">A small SATB chord sketchbook</div>
       </div>
     </div>
-    <div class="toolbar">
+    <div class="toolbar" id="chordHeaderActions">
       <button class="btn icon" id="newPieceBtn" type="button">New</button>
       <button class="btn icon" id="exportBtn" type="button">Export</button>
       <label class="btn icon" style="display:inline-flex;align-items:center">
@@ -850,6 +852,7 @@
     const practice = mode === "practice";
     document.getElementById("chordPanel").hidden = practice;
     document.getElementById("practicePanel").hidden = !practice;
+    document.getElementById("chordHeaderActions").hidden = practice;
 
     const chordButton = document.getElementById("chordModeButton");
     const practiceButton = document.getElementById("practiceModeButton");
