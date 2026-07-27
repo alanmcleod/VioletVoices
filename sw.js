@@ -1,5 +1,5 @@
-const APP_CACHE = "violet-voices-app-v1-11";
-const PIANO_CACHE = "violet-voices-piano-v1";
+const APP_CACHE = "violet-voices-app-v1-12-playback";
+const PIANO_CACHE = "violet-voices-piano-v2";
 const APP_FILES = [
   "./",
   "./index.html",

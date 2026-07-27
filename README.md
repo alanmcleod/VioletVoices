@@ -1,4 +1,4 @@
-# Violet Voices 1.11
+# Violet Voices 1.12
 
 This is the self-contained offline-piano edition.
 
@@ -59,3 +59,28 @@ The active workspace is indicated by the dark-purple button and displayed conten
 
 The New, Export and Import controls now appear only in Chord mode.
 They are completely hidden when Practise log is selected.
+
+
+## Version 1.12
+
+- The duration selector inside Add/Edit chord now follows the main Durations setting.
+  It displays either UK duration names or numeric values.
+- Each SATB editor row now has a narrow Prior strip showing that voice's notes in
+  the preceding two chords.
+- When editing a chord, the strip shows the two chords before it. When inserting,
+  it shows the two chords before the insertion point.
+
+
+## Version 1.12 playback update
+
+Playback now follows the selected tempo and written duration for Play all,
+individual chord playback and editor Preview.
+
+Playback styles:
+
+- Detached: notes sound for about 80% of their written duration.
+- Normal: notes sound for about 95% of their written duration.
+- Legato: notes slightly overlap the next chord.
+
+The local piano samples have also been lengthened to support sustained minims,
+dotted minims and semibreves more naturally.
