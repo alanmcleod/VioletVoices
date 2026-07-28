@@ -1,18 +1,15 @@
-# Violet Voices 2.0
+# Violet Voices Salamander piano update
 
-A browser-based vocal harmony sketchbook and practise log.
+This update replaces the previous synthetic piano samples with a two-layer Salamander Grand Piano set. It adds every semitone from C2 to C6, expressive soft/loud velocity blending, and a saved Sustain toggle beside Playback.
 
-## New in 2.0
+## Install
 
-- Optional project name.
-- SATB default with selectable Single voice, SA, TB, SAB, SSA, TTB, SSAA and TTBB voicings.
-- Safe voicing changes preserve hidden notes.
-- Adaptive chord cards, playback and stave view.
-- Duplicate Voice tool for copying one complete part into another.
-- Human-readable sharing through the device share menu, clipboard or a text file.
-- Project names appear in shared summaries and filenames.
-- Existing version 1.x SATB projects are migrated when opened.
+Upload the contents of this folder to the root of the Violet Voices GitHub repository, replacing files when asked. The new `piano` folder must replace the old one completely. Keep the folder structure unchanged.
 
-## Installation
+Because the service-worker cache version has changed, close and reopen the installed web app after GitHub Pages finishes deploying. If the old sound remains, remove Violet Voices from the iPhone Home Screen, open the GitHub Pages site in Safari once, then add it to the Home Screen again.
 
-Upload every file and folder to the same web location. Keep the piano and icons folders intact. Open index.html through your web host, not directly from the ZIP.
+## Piano behaviour
+
+The Volume slider now controls both loudness and the blend between genuine soft and loud samples. Sustain is off by default. When enabled, adjacent chords overlap gently by about 120 ms.
+
+See `ATTRIBUTION.txt` and `LICENSE-SALAMANDER.txt` for audio credit and licence details.

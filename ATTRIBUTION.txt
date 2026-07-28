@@ -1,0 +1,17 @@
+Violet Voices piano samples
+
+Derived from Salamander Grand Piano V3 by Alexander Holm.
+Original instrument: Yamaha C5 grand piano.
+Licence: Creative Commons Attribution 3.0 Unported (CC BY 3.0).
+
+Changes made for Violet Voices:
+- selected genuine soft (v3) and loud (v13) velocity recordings
+- generated a chromatic C2-C6 set from the nearest recorded minor-third sample
+- pitch-corrected with high-quality offline processing
+- trimmed leading silence while retaining the hammer attack
+- level-balanced, shortened and gently faded at the tail
+- encoded as Ogg Vorbis for browser playback
+
+Original project: Salamander Grand Piano V3
+Author: Alexander Holm
+Licence information: https://creativecommons.org/licenses/by/3.0/
