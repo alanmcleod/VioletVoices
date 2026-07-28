@@ -1,86 +1,18 @@
-# Violet Voices 1.12
+# Violet Voices 2.0
 
-This is the self-contained offline-piano edition.
+A browser-based vocal harmony sketchbook and practise log.
 
-## Changes
+## New in 2.0
 
-- Includes 17 local acoustic-piano MP3 samples.
-- No external audio host is required.
-- Samples load only when nearby notes are played.
-- Pitch and chord names always remain note names.
-- A visible full-width Duration names selector switches between UK and US terminology.
-- The synthesised tone remains as an emergency fallback.
+- Optional project name.
+- SATB default with selectable Single voice, SA, TB, SAB, SSA, TTB, SSAA and TTBB voicings.
+- Safe voicing changes preserve hidden notes.
+- Adaptive chord cards, playback and stave view.
+- Duplicate Voice tool for copying one complete part into another.
+- Human-readable sharing through the device share menu, clipboard or a text file.
+- Project names appear in shared summaries and filenames.
+- Existing version 1.x SATB projects are migrated when opened.
 
-## Uploading
+## Installation
 
-Replace the existing GitHub repository contents with everything in this folder,
-including the piano and icons folders.
-
-After GitHub Pages updates, close and reopen the installed app. If Safari keeps
-the old version, remove the home-screen app once and add it again from Safari.
-
-See AUDIO-LICENCE.txt and GPL-2.txt for the included audio licensing.
-
-
-## Duration naming
-
-The main settings panel now has a full-width selector:
-
-- UK: quaver, crotchet, minim, dotted minim, semibreve
-- US: eighth note, quarter note, half note, dotted half note, whole note
-
-This changes duration wording on chord cards and in the chord editor. It does not
-change pitch names or detected chord names.
-
-
-## Practice log
-
-Use the two-button mode bar to switch between Chord mode and Practise log.
-The active mode is purple and labelled on.
-
-Practice entries include activity, instrument or voice, date, minutes and optional notes.
-The app shows totals for today, this week and all time. Practice data is stored in
-the browser and can be exported as a JSON backup.
-
-
-## Version 1.9
-
-- The active workspace button now uses a dark purple background with white text.
-- “Practice mode” has been renamed “Practise log”.
-
-
-## Version 1.10
-
-The workspace buttons now use the fixed labels “Chord mode” and “Practise log”.
-The active workspace is indicated by the dark-purple button and displayed content.
-
-
-## Version 1.11
-
-The New, Export and Import controls now appear only in Chord mode.
-They are completely hidden when Practise log is selected.
-
-
-## Version 1.12
-
-- The duration selector inside Add/Edit chord now follows the main Durations setting.
-  It displays either UK duration names or numeric values.
-- Each SATB editor row now has a narrow Prior strip showing that voice's notes in
-  the preceding two chords.
-- When editing a chord, the strip shows the two chords before it. When inserting,
-  it shows the two chords before the insertion point.
-
-
-## Version 1.12 playback update
-
-Playback now follows the selected tempo and written duration for Play all,
-individual chord playback and editor Preview.
-
-Playback styles:
-
-- Detached: notes sound for about 80% of their written duration.
-- Normal: notes sound for about 95% of their written duration.
-- Legato: notes slightly overlap the next chord.
-
-The local piano samples have also been lengthened to support sustained minims,
-dotted minims and semibreves more naturally.
+Upload every file and folder to the same web location. Keep the piano and icons folders intact. Open index.html through your web host, not directly from the ZIP.
