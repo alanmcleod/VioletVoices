@@ -34,7 +34,18 @@ const REL={A:"C",E:"G",B:"D","F♯":"A","C♯":"E","G♯":"B","D♯":"F♯",D:"F
 const VOICES={S:{name:"Soprano",short:"S",staff:"treble",range:[60,81],default:{letter:"F",accidental:"key",octave:5}},S2:{name:"Soprano 2",short:"S2",staff:"treble",range:[60,79],default:{letter:"D",accidental:"key",octave:5}},A:{name:"Alto",short:"A",staff:"treble",range:[55,74],default:{letter:"D",accidental:"key",octave:4}},A2:{name:"Alto 2",short:"A2",staff:"treble",range:[53,72],default:{letter:"A",accidental:"key",octave:3}},T:{name:"Tenor",short:"T",staff:"bass",range:[48,67],default:{letter:"A",accidental:"key",octave:3}},T2:{name:"Tenor 2",short:"T2",staff:"bass",range:[45,65],default:{letter:"F",accidental:"key",octave:3}},B:{name:"Bass",short:"B",staff:"bass",range:[40,60],default:{letter:"D",accidental:"key",octave:3}},B2:{name:"Bass 2",short:"B2",staff:"bass",range:[36,57],default:{letter:"A",accidental:"key",octave:2}},Solo:{name:"Solo voice",short:"Solo",staff:"treble",range:[48,81],default:{letter:"D",accidental:"key",octave:4}}};
 const PRESETS={SATB:["S","A","T","B"],Solo:["Solo"],SA:["S","A"],TB:["T","B"],SAB:["S","A","B"],SSA:["S","S2","A"],TTB:["T","T2","B"],SSAA:["S","S2","A","A2"],TTBB:["T","T2","B","B2"]};
 const DUR_NAMES={4:"Semibreve",3:"Dotted minim",2:"Minim",1.5:"Dotted crotchet",1:"Crotchet",.5:"Quaver",.25:"Semiquaver"},DUR_VAL={4:"1",3:"3/4",2:"1/2",1.5:"3/8",1:"1/4",.5:"1/8",.25:"1/16"},PC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
-function durationIcon(d){d=+d;const filled=d<=1.5,stem=d<=2,flags=d===.5?1:d===.25?2:0,dotted=d===3||d===1.5;let x=9,y=17,svg=`<svg class="duration-icon" viewBox="0 0 28 28" aria-hidden="true" focusable="false">`;svg+=filled?`<ellipse cx="${x}" cy="${y}" rx="5.2" ry="3.7" transform="rotate(-18 ${x} ${y})" fill="currentColor"/>`:`<ellipse cx="${x}" cy="${y}" rx="5.2" ry="3.7" transform="rotate(-18 ${x} ${y})" fill="none" stroke="currentColor" stroke-width="2.2"/>`;if(stem)svg+=`<path d="M13 16 V3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`;if(flags>=1)svg+=`<path d="M13 4 C20 5 21 10 17 13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`;if(flags>=2)svg+=`<path d="M13 9 C20 10 21 15 17 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`;if(dotted)svg+=`<circle cx="22" cy="17" r="1.8" fill="currentColor"/>`;return svg+`</svg>`}
+function durationIcon(d){
+  d=+d;
+  const filled=d<=1.5, stem=d<=2, flags=d===.5?1:d===.25?2:0, dotted=d===3||d===1.5;
+  const head=filled
+    ? '<ellipse cx="9" cy="18" rx="5.3" ry="3.8" transform="rotate(-18 9 18)" fill="#241f2b"/>'
+    : '<ellipse cx="9" cy="18" rx="5.3" ry="3.8" transform="rotate(-18 9 18)" fill="white" stroke="#241f2b" stroke-width="2.2"/>';
+  const stemPath=stem?'<path d="M13 17V3" stroke="#241f2b" stroke-width="2.35" stroke-linecap="round" fill="none"/>':'';
+  const flag1=flags>=1?'<path d="M13 4c6 .8 8 5.2 4.2 9" stroke="#241f2b" stroke-width="2.35" stroke-linecap="round" fill="none"/>':'';
+  const flag2=flags>=2?'<path d="M13 9c6 .8 8 5.2 4.2 9" stroke="#241f2b" stroke-width="2.35" stroke-linecap="round" fill="none"/>':'';
+  const dot=dotted?'<circle cx="23" cy="18" r="1.8" fill="#241f2b"/>':'';
+  return `<svg class="duration-icon" width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">${head}${stemPath}${flag1}${flag2}${dot}</svg>`;
+}
 function durationMarkup(d){const detail=piece.durationLabels==="fractions"?(DUR_VAL[d]||d):(DUR_NAMES[d]||d);return `<span class="duration-symbol">${durationIcon(d)}</span> ${detail}`}
 function updateDurationIcon(){const el=$("chordDurationIcon");if(el)el.innerHTML=durationIcon($("chordDuration").value)}
 const $=id=>document.getElementById(id),clone=x=>JSON.parse(JSON.stringify(x)); let editIndex=null,looping=false,playToken=0,audioCtx=null,activeNodes=[],sampleBuffers=new Map(),samplePromises=new Map();

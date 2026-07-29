@@ -1,27 +1,14 @@
-VIOLET VOICES 2.1 UI UPDATE
+VIOLET VOICES 2.1 — EMBEDDED SVG DURATION ICON FIX
 
-This is an update-only package. It assumes the Salamander piano update is already installed.
+Upload these two files to the root of your GitHub repository and replace the existing versions:
 
-Replace these files in the root of the GitHub repository:
-- index.html
-- sw.js
+• index.html
+• sw.js
 
-Changes included:
-- Restores “Prior two notes” in the chord editor.
-- Adds an editor summary panel showing current notes, duration and label.
-- Colour-codes Soprano, Alto, Tenor and Bass consistently.
-- Keeps the chord editor in a compact two-column layout on iPhone.
-- Prevents the first note selector opening automatically when the editor opens.
-- Adds semiquaver / 1/16 chord duration.
-- Shows musical note symbols for all durations.
-- Shows the volume percentage.
-- Removes the redundant “Chord X” lozenge; an optional chord label is shown only when entered.
-- Retains the Salamander piano engine and Sustain toggle.
+No separate SVG files are required. The note drawings are embedded directly inside index.html.
 
-After uploading, allow GitHub Pages a minute to rebuild, then fully close and reopen the installed web app. If the old layout remains, refresh the page in Safari once to update the service worker cache.
+The update uses embedded vector drawings for semibreve, dotted minim, minim, dotted crotchet, crotchet, quaver and semiquaver. It also changes the service-worker cache name so the corrected interface is fetched instead of an older cached copy.
 
+After GitHub Pages has updated, close Violet Voices completely and reopen it. If the old symbols remain, reload the page once in Safari before reopening the Home Screen app.
 
-SVG duration icon fix:
-- Replaces unsupported Unicode music glyphs with built-in SVG note icons.
-- Icons now display consistently on iPhone, desktop and offline.
-- No changes are needed to the piano folder.
+The piano folder does not need to be changed.
