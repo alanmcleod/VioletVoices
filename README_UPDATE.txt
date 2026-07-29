@@ -19,3 +19,9 @@ Changes included:
 - Retains the Salamander piano engine and Sustain toggle.
 
 After uploading, allow GitHub Pages a minute to rebuild, then fully close and reopen the installed web app. If the old layout remains, refresh the page in Safari once to update the service worker cache.
+
+
+SVG duration icon fix:
+- Replaces unsupported Unicode music glyphs with built-in SVG note icons.
+- Icons now display consistently on iPhone, desktop and offline.
+- No changes are needed to the piano folder.
