@@ -1,4 +1,4 @@
-const APP_CACHE = "violet-voices-app-v2-1-salamander";
+const APP_CACHE = "violet-voices-app-v2-1-ui-20260729";
 const PIANO_CACHE = "violet-voices-piano-salamander-v1";
 const APP_FILES = ["./","./index.html","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png","./icons/icon-maskable-192.png","./icons/icon-maskable-512.png","./icons/apple-touch-icon.png","./icons/favicon-32.png","./icons/favicon-16.png","./README.md","./ATTRIBUTION.txt","./LICENSE-SALAMANDER.txt","./GPL-2.txt"];
 self.addEventListener("install",event=>event.waitUntil(caches.open(APP_CACHE).then(c=>c.addAll(APP_FILES)).then(()=>self.skipWaiting())));
